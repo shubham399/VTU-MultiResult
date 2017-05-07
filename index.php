@@ -23,39 +23,8 @@
 </style>
 <body>
 <div class="container">
-<header><img src="http://results.vtu.ac.in/results/images/logo.png"  alt="VTU LOGO"></header>
+<header><img src="logo.png"  alt="VTU LOGO"></header>
 <?php
-function curlit($usn)
-{
-  $curl_handle=curl_init();
-  curl_setopt($curl_handle,CURLOPT_URL,'http://results.vtu.ac.in/results/result_page.php?usn='.$usn);
-  curl_setopt($curl_handle,CURLOPT_CONNECTTIMEOUT,2);
-  curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
-  $buffer = curl_exec($curl_handle);
-
-  while (empty($buffer)){
-        $buffer = curl_exec($curl_handle);
-        	 usleep(20);
-  }
-  curl_close($curl_handle);
- 	  $found=0;
-		$found=stripos($buffer,'<script type="text/javascript">');
-		if($found)
-		{
-			echo "<div class=\"col-md-12\"><div class=\"panel panel-warning\">
-										<div class=\"panel-heading text-center\">
-Invalid USN or Result Yet Not Available</br></div></div></div>";
-		}
-		else if($found === false)
-		{
-		$extract = array("start" =>'	<div class="row" style="margin-top:20px;">', "end"=>'																			</table>');
-		$start = stripos($buffer, $extract['start']);
-		$end = strripos($buffer, $extract['end']);
-		$buffer = substr($buffer, $start, $end);
-		$buffer=$buffer."</table></div>";
-    print $buffer."<br>";
-		}
-}
 if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_POST["Check"]))
 {
   $start=htmlspecialchars($_POST["start"]);
@@ -76,7 +45,7 @@ if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_POST["Check"]))
 		$e=(int)substr($end,7);
 		if(($e-$s)>50)
 		{
-			$e=$s+10;
+			$e=$s+50;
 		}
 		for($i=$s;$i<=$e;$i++)
 		{
@@ -87,16 +56,29 @@ if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_POST["Check"]))
 			$usn=$usn."0";
 			$usn=$usn.$i;
       echo "<div class=\"container\">";
-      curlit($usn);
+	  if(!file_exists("results/$usn.xml"))
+	  {
+		usleep(1);
+		//curlit($usn);
+					echo "<iframe src=\"get_result.php?usn=".$usn."\"class=\"table\" height=485	 style=\"border:none\"></iframe>";
+	  }
+	  else
+	  {
+		  $file=fopen("results/$usn.xml","r");
+		  $buff=fread($file,filesize("results/$usn.xml"));
+		  echo $buff;
+		  fclose($file);
+
+	  }
       echo "</div>";
-      usleep(10);
+
     }
 }
 }
 else {
   ?>
   <div class="text-center">
-<br><br><br><b>ONLY 10 RESULTS AT A TIME ELSE MAY CAUSE IN BROWSER CRASH</b><br/>
+<br><br><br><b>WE RECOMMEND 10 RESULTS AT A TIME ELSE MAY RESULT IN BROWSER CRASH</b><br/>
 <div class="row pad bg-1">
 <div class="col-sm-4 "></div>
 	<div class="col-sm-4 ">
