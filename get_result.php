@@ -18,7 +18,7 @@ function curlit($usn)
   $buffer = curl_exec($curl_handle);
   $i=1;
   while (empty($buffer) && $i <11){
-	echo "Retrying.... $i <br>";
+	echo "<p class=\"text-center\">Retrying....<b> $i </b></p>";
   echo str_pad('',4096)."\n";
 	ob_flush();
   flush();
@@ -56,12 +56,26 @@ Invalid USN or Result Yet Not Available</br></div></div></div>";
 No Response from Server</br></div></div></div>";
   }
 }
-ob_start();
-echo "Checking Result.<br/>";
+if(isset($_GET["usn"]))
+{
+	$usn=htmlspecialchars($_GET["usn"]);
+	 if(!file_exists("results/$usn.xml"))
+	 {
+		 ob_start();
+echo "<p class=\"text-center\">Checking Result.</p>";
 echo str_pad('',4096)."\n";
 ob_flush();
 flush();
-if(isset($_GET["usn"]))
-	curlit(htmlspecialchars($_GET["usn"]));
+		curlit($usn);
+	 }
+	 else
+	  {
+		  $file=fopen("results/$usn.xml","r");
+		  $buff=fread($file,filesize("results/$usn.xml"));
+		  echo $buff;
+		  fclose($file);
+
+	  }
+}
 ob_end_flush();
 ?>

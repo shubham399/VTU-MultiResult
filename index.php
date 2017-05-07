@@ -30,6 +30,8 @@ if($_SERVER["REQUEST_METHOD"]=="POST" && isset($_POST["Check"]))
   $start=htmlspecialchars($_POST["start"]);
 	if(!isset($_POST["end"]))
 		$end=$start;
+	else if(empty($_POST["end"]))
+		$end=$start;
 	else
 	$end=htmlspecialchars($_POST["end"]);
 	$base=substr($start,0,7);
@@ -84,7 +86,7 @@ else {
 	<div class="col-sm-4 ">
 	<h3>Get Results:</h3>
 	<form method="post" id="usn" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
-	<b>START USN:</b><input type="text" id="start" class="form-control" name="start" pattern="[1-4]{1}[A-Za-z]{2}[0-9]{2}[A-Za-z]{2}[0-9]{3}" title="Please Enter 1st 7 character of the USN" ><br>
+	<b>START USN:</b><input type="text" id="start" class="form-control" name="start" pattern="[1-4]{1}[A-Za-z]{2}[0-9]{2}[A-Za-z]{2}[0-9]{3}" title="Please Enter 1st 7 character of the USN" required><br>
 	<b>END USN:</b><input type="text" class="form-control" name="end" pattern="[1-4]{1}[A-Za-z]{2}[0-9]{2}[A-Za-z]{2}[0-9]{3}" title="Please Enter 1st 7 character of the USN"><br>
 <br><input type="submit" class="btn btn-primary" name="Check" value="GET RESULT">
 </form>
