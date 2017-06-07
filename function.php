@@ -58,7 +58,13 @@ No Response from Server</br></div></div></div>";
 
 function get_connection()
 {
-	$conn = new mysqli('localhost','id1415568_username123','Password123','id1415568_result');
+$conn = new mysqli(
+    getenv('OPENSHIFT_MYSQL_DB_HOST'), 
+    getenv('OPENSHIFT_MYSQL_DB_USERNAME'), 
+    getenv('OPENSHIFT_MYSQL_DB_HOST'), 
+    getenv('OPENSHIFT_MYSQL_DB_PASSWORD'),
+    getenv('OPENSHIFT_MYSQL_DB_PORT')
+);
 	if ($conn->connect_error) {
     die("Connection failed: ");
 	} 
