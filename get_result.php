@@ -1,81 +1,107 @@
 <head>
-  <title>Multiple Result</title>
+  <title>Get Result</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://bootswatch.com/flatly/bootstrap.min.css">
-  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" media="all">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" media="all">
+  <script src="js/jquery.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
 </head>
-
+<body>
+<div class="container">
 <?php
-function curlit($usn)
+session_start();
+if(isset($_SESSION['userid']) || isset($_COOKIE['usn']))
 {
-  $curl_handle=curl_init();
-  curl_setopt($curl_handle,CURLOPT_URL,'http://results.vtu.ac.in/results/result_page.php?usn='.$usn);
-  curl_setopt($curl_handle,CURLOPT_CONNECTTIMEOUT,2);
-  curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
-  $buffer = curl_exec($curl_handle);
-  $i=1;
-  while (empty($buffer) && $i <11){
-	echo "<p class=\"text-center\">Retrying....<b> $i </b></p>";
-  echo str_pad('',4096)."\n";
-	ob_flush();
-  flush();
-  $i++;
-        $buffer = curl_exec($curl_handle);
-        	 usleep(10);
-  }
-  curl_close($curl_handle);
-  if($i<11)
-  {
-   	  $found=0;
-		$found=stripos($buffer,'<script type="text/javascript">');
-		if($found)
-		{
-			echo "<div class=\"col-md-12\"><div class=\"panel panel-warning\">
-										<div class=\"panel-heading text-center\">
-Invalid USN or Result Yet Not Available</br></div></div></div>";
-		}
-		else if($found === false)
-		{
-		$extract = array("start" =>'	<div class="row" style="margin-top:20px;">', "end"=>'																			</table>');
-		$start = stripos($buffer, $extract['start']);
-		$end = strripos($buffer, $extract['end']);
-		$buffer = substr($buffer, $start, $end);
-		$buffer=$buffer."</table></div></div></div>";
-		$file=fopen("results/$usn.xml","w");
-		fwrite($file,$buffer);
-		fclose($file);
-    print $buffer."<br>";
-		}
-  }
-  else {
-    echo "<div class=\"col-md-12\"><div class=\"panel panel-danger\">
-                  <div class=\"panel-heading text-center\">
-No Response from Server</br></div></div></div>";
-  }
-}
+require_once('function.php');
 if(isset($_GET["usn"]))
 {
-	$usn=htmlspecialchars($_GET["usn"]);
-	 if(!file_exists("results/$usn.xml"))
-	 {
-		 ob_start();
-echo "<p class=\"text-center\">Checking Result.</p>";
-echo str_pad('',4096)."\n";
-ob_flush();
-flush();
-		curlit($usn);
-	 }
+	$usn=strtoupper(htmlspecialchars($_GET["usn"]));
+	$type=htmlspecialchars($_GET["type"]);
+	if($type != 1 && $type != 2)
+		$type=1;
+	$freeusn=1;
+	if(isset($_COOKIE['usn']) && !isset($_SESSION['userid']))
+	{
+		$hash=$_COOKIE['hash'];
+		require_once('function.php');
+		$newwhash=gethash($_COOKIE['usn']);
+		//echo $hash." ".$newwhash."<br>";
+		if($hash == $newwhash)
+		{
+			$usns=explode(",",$_COOKIE['usn']);
+			foreach($usns as $i)
+			{
+				if($i==$usn)
+				{
+					$freeusn=0;
+					break;
+				}
+			}
+		}
+		else
+		{
+			echo "<br><br><br><h4 class=\"help-block text-center\">SOME ERROR HAPPENED PLEASE RETRY</h4>";
+?>
+  <hr />
+		<p class="help-block text-center"><b>By:</b>Shubham</p>
+        <div class="text-center center-block">
+                <a href="http://github.com/shubham399"><i class="fa fa-github fa-3x social"></i></a>
+</div>
+<div class="help-block text-centre">
+<b>Liked My Work?  Help me to get a Cup of Coffee and stay motivated to work on this Project <a class="btn btn-hot text-uppercase btn-lg" href="https://www.payumoney.com/paybypayumoney/#/310421">Donate <span class="glyphicon glyphicon-heart" aria-hidden="true"></span></a></b>
+
+</div>
+</div>
+</body>
+</html>
+<?php		
+		exit(0);
+		
+		}
+	}
+	if($freeusn==0 || isset($_SESSION['userid']))
+	{
+		$location="results";
+		if($type==2)
+			$location="reval";
+	 if(!file_exists("$location/$usn.xml"))
+		curlit($usn,$type);
 	 else
 	  {
-		  $file=fopen("results/$usn.xml","r");
-		  $buff=fread($file,filesize("results/$usn.xml"));
+		  $file=fopen("$location/$usn.xml","r");
+		  $buff=fread($file,filesize("$location/$usn.xml"));
 		  echo $buff;
 		  fclose($file);
+		  require_once('function.php');
+		  $page=htmlspecialchars($_SERVER["PHP_SELF"]);
+		  $page=$page."?usn=$usn";
+		  $hash=gethash("$usn|$page|$type");
+		  $link="<div class=\"row text-center\"><h3><a href=\"recheck.php?usn=$usn&tl=$page&type=$type&hash=$hash\">Recheck Your Result</a></h3></div>";
+		  echo $link;
 
 	  }
+	}
+	else
+		echo "<br><br><br><h4 class=\"help-block text-center\">You are  only  allowed to  search for ".$_COOKIE["usn"]."</h4>";
 }
+else
+		echo "<br><br><br><h4 class=\"help-block text-center\">You are  only  allowed to  search for ".$_COOKIE["usn"]."</h4>";
 ob_end_flush();
+}
+else
+{
+	echo "<br><br><br><h4 class=\"help-block text-center\">Please Login to Search the Multiple Results</h4>";
+}
 ?>
+    <hr />
+		<p class="help-block text-center"><b>By:</b>Shubham</p>
+        <div class="text-center center-block">
+                <a href="http://github.com/shubham399"><i class="fa fa-github fa-3x social"></i></a>
+</div>
+				<div class="row">       
+       
+</div>
+</div>
+</body>
+</html>
